@@ -77,15 +77,14 @@ class Spot():
         if self.row < self.total_row-1 and not grid[self.row+1][self.col-10].isBarrier():
             self.neighbour.append(grid[self.row+1][self.col-10])
 
+        if self.col-10 > 0 and not grid[self.row][self.col-1-10].isBarrier():
+            self.neighbour.append(grid[self.row][self.col-1-10])     
+
         if self.row > 0 and not grid[self.row-1][self.col-10].isBarrier():
             self.neighbour.append(grid[self.row-1][self.col-10])
 
         if self.col-10 < self.total_row-1 and not grid[self.row][self.col+1-10].isBarrier():
             self.neighbour.append(grid[self.row][self.col+1-10])
-
-        if self.col-10 > 0 and not grid[self.row][self.col-1-10].isBarrier():
-            self.neighbour.append(grid[self.row][self.col-1-10])
-        
 
     def __lt__(self, other):
         return False
@@ -100,6 +99,8 @@ class button():
         self.color = CYAN
         self.text = text
         self.index = index
+        if index == 1:
+            self.color = RED
 
     def draw(self , win):
         pygame.draw.rect(win , self.color , (self.x , self.y , self.length , self.breath))
@@ -117,6 +118,7 @@ def reconstruct_path(cameFrom , current , draw):
     while current in cameFrom:
         current = cameFrom[current]
         current.makePath()
+        #print(current.x)
         draw()
 
 
@@ -164,6 +166,47 @@ def algorithm(draw , grid , start , end):
             current.makeClosed()
     return False
 
+def greedy_dfs(draw , grid , start , end):
+    #print('herw in 1')
+    count = 0
+    openSet = PriorityQueue()
+    openSet.put((0, count , start))
+    cameFrom = {}
+    #gScore = {spot : float("inf") for row in grid for spot in row}
+    #gScore[start] = 0
+    fScore = {spot : float("inf") for row in grid for spot in row}
+    fScore[start] = h(start.get_pos() , end.get_pos())
+
+    openSetHash = {start}
+    
+    while not openSet.empty():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        
+        current = openSet.get()[2]
+        #openSetHash.remove(current)
+
+        if current == end:
+            reconstruct_path(cameFrom , end , draw)
+            start.makeStart()
+            end.makeEnd()
+            return True
+        
+        for neighbor in current.neighbour:
+            
+            fScore[neighbor] = h(neighbor.get_pos(),end.get_pos())
+            if neighbor not in openSetHash:
+                count += 1
+                openSet.put((fScore[neighbor] , count , neighbor))
+                openSetHash.add(neighbor)
+                cameFrom[neighbor] = current
+                neighbor.makeOpen()
+        draw()
+        if current != start:
+            current.makeClosed()
+    return False
+
 def algodikshitras(draw , grid , start , end):
     print('herw in 2')
     count = 0
@@ -205,6 +248,36 @@ def algodikshitras(draw , grid , start , end):
             current.makeClosed()
     return False
 
+def dfs(draw , grid , start , end):
+    openset = []
+    openset.append(start)
+    cameFrom  = {}
+    openSetHash = {start}
+
+    while len(openset) != 0:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        current = openset.pop()
+        #openSetHash.remove(current)
+        openSetHash.add(current)
+
+        if current == end:
+            reconstruct_path(cameFrom , end , draw)
+            start.makeStart()
+            end.makeEnd()
+            return True
+
+        for neighbor in current.neighbour:
+            if neighbor not in openSetHash:
+                openset.append(neighbor)
+                #openSetHash.add(neighbor)
+                cameFrom[neighbor] = current
+        current.makeOpen()
+        draw()
+        if current != start:
+            current.makeClosed()
+    return False
 
 def makeGrid(rows , width):
     grid = []
@@ -278,8 +351,12 @@ def makebutton():
     butt.append(but)
     but = button(180 , 60 , 130 , 40 , False , 'Dijkstra' ,2)
     butt.append(but)
-    but = button(340 , 60 , 60 , 40 , False , 'BFS' ,3)
+    but = button(340 , 60 , 80 , 40 , False , 'BFS' ,3)
     butt.append(but)
+    but = button(100 , 10 , 120 , 40 , False , 'DFS' ,4)
+    butt.append(but)
+    but = button(250 , 10 , 160 , 40 , False , 'Greedy BFS' ,5)
+    butt.append(but) 
     return butt
     
 
@@ -341,6 +418,10 @@ def main(win, width):
                         algodikshitras(lambda:  draw(win , grid , rows , width), grid , start ,end )
                     elif index == 3:
                         algodikshitras(lambda:  draw(win , grid , rows , width), grid , start ,end )
+                    elif index == 4:
+                        dfs(lambda : draw(win , grid , rows , width), grid , start ,end )
+                    elif index == 5:
+                        greedy_dfs(lambda : draw(win , grid , rows , width), grid , start ,end )
 
                 if event.key == pygame.K_c:
                     start = None
