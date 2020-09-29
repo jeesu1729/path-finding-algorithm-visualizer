@@ -5,7 +5,7 @@ from queue import PriorityQueue
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH , WIDTH + 160))
-pygame.display.set_caption("A* algorithm")
+pygame.display.set_caption("Path-Finding-Visualizer")
 
 RED = (255, 0, 0)
 REDi = (52, 152, 219)
@@ -187,8 +187,6 @@ def greedy_dfs(draw , grid , start , end):
     openSet = PriorityQueue()
     openSet.put((0, count , start))
     cameFrom = {}
-    #gScore = {spot : float("inf") for row in grid for spot in row}
-    #gScore[start] = 0
     fScore = {spot : float("inf") for row in grid for spot in row}
     fScore[start] = h(start.get_pos() , end.get_pos())
 
@@ -200,7 +198,6 @@ def greedy_dfs(draw , grid , start , end):
                 pygame.quit()
         
         current = openSet.get()[2]
-        #openSetHash.remove(current)
 
         if current == end:
             reconstruct_path(cameFrom , end , draw)
